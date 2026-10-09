@@ -1,0 +1,11 @@
+data/
+cache/
+cache2/
+preds/*
+!preds/ens_v5.json
+submissions/
+logs/
+.venv/
+*.npz
+*.laz
+__pycache__/
