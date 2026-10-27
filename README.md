@@ -22,7 +22,7 @@ The dataset (Zenodo, doi 10.5281/zenodo.23012506, CC BY-SA 4.0) is not included 
 **3. Whorl detection (`src/whorl_cnn.py`, `src/ensemble.py`).**
 - **Model:** a dilated 1-D CNN regresses a Gaussian heatmap (σ 3 cm) of whorl heights. The data source (Finland, Sweden, Norway,
   read from the TreeID pattern) is given to the network as one-hot input channels.
-- **Ensemble (v7, submitted):** 8 seeds per feature version, plus a second pair of the two versions trained with dropout 0.1,
+- **Ensemble (v7):** 8 seeds per feature version, plus a second pair of the two versions trained with dropout 0.1,
   EMA weights (0.999) and ±10% height-stretch augmentation (3 seeds each). All four heatmaps are averaged (2-cm ones
   interpolated to the 1-cm grid) in `src/final_ens.py`.
 - **Peaks:** whorls are local maxima above a threshold with a minimum spacing, refined to sub-bin height. Every tree gets at least
@@ -41,7 +41,7 @@ The dataset (Zenodo, doi 10.5281/zenodo.23012506, CC BY-SA 4.0) is not included 
 | Whorl F1, v7 ensemble (nested CV: settings re-tuned inside each fold) | 0.678 | 0.741 | abstains |
 | Stem diameter RMSE (m) | 0.015 | 0.007 | 0.036 |
 
-Public benchmark board (64 hidden test trees): whorl F1 0.506 with the 3-seed version (v3). Nested CV, Finland + Sweden combined: v3 0.675, v5 0.684, v7 0.692.
+Public benchmark board (64 hidden test trees): whorl F1 0.506 with the 3-seed version (v3), which stays our leaderboard entry. v7 scored 0.490 there (27 Oct), so the nested-CV gain (Finland + Sweden combined: v3 0.675, v5 0.684, v7 0.692) did not carry over to the 64 test trees. v3 is this pipeline with 3 seeds per CNN.
 
 ## Reproduce
 

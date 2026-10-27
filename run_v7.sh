@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# forwood_v7 (the submitted model): v5's 8-seed source-one-hot CNN pair (run_v5_seeds.sh first) plus a second pair
+# forwood_v7 (uploaded 27 Oct, board F1 0.490; v3 0.506 stays the leaderboard entry): v5's 8-seed source-one-hot CNN pair (run_v5_seeds.sh first) plus a second pair
 # trained with dropout 0.1, EMA weights (0.999) and +-10% height stretch; one averaged heatmap, per-source peak settings.
 set -e
 PY=.venv/bin/python
