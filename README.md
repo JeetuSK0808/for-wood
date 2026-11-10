@@ -33,6 +33,27 @@ The dataset (Zenodo, doi 10.5281/zenodo.23012506, CC BY-SA 4.0) is not included 
 
 **4. Stem profile (`src/stem_diam.py`).** The fitted diameter plus a gradient-boosted correction of (reference − fit). Its features are the fitted profile, relative height, the crown base, point density, and the data source, read from the TreeID pattern. Output is every 10 cm plus 0.6, 1.3 and 2.0 m.
 
+## Update for the 9 Nov 2026 rules (v8a)
+
+The organisers corrected the labels (FOR-wood v2, Zenodo 10.5281/zenodo.24083541; point clouds unchanged) and now rank whorl
+detection by **Skill = (F1 − F1_comb) / (1 − F1_comb)** per source, averaged over Finland, Sweden and Norway. The comb is a blind,
+evenly spaced guess. Predictions more than 5 cm above a tree's top label are ignored. v8a keeps the v7 CNN heatmaps (trained on the
+v1 labels) and re-tunes only the decoding on the v2 labels (`src/final_v2.py`; local copy of the scorer in `src/score_v2.py`):
+- **Finland:** heatmap peaks, threshold 0.25, minimum spacing 16 cm.
+- **Sweden:** heatmap peaks (threshold 0.15, spacing 6 cm) plus evenly spaced guesses every 15 cm above the highest peak.
+- **Norway:** the blind comb itself (from 0.8 m, every 12 cm). On the sparse Norwegian clouds our model was no better than the comb
+  in nested cross-validation, and the earlier choice to predict almost nothing there now scores far below the comb.
+- **Stems:** the gradient-boosted correction is refit on the v2 stem labels, and profiles run to 0.5 m above the fitted stem top.
+
+Nested cross-validation under the new rules (v2 labels; settings chosen on 4 folds, scored on the 5th; `src/eval_board.py`):
+
+| | Skill FI | Skill SE | Skill NO | mean |
+|---|---|---|---|---|
+| v7 decoding | +0.650 | +0.481 | −0.508 | +0.208 |
+| v8a decoding | +0.650 | +0.552 | 0.000 | +0.401 |
+
+Stem diameter RMSE with the v2-label correction: 0.018 m (FI 0.012, SE 0.007, NO 0.033).
+
 ## Results (out-of-fold, 189 training trees, mean per-tree F1 at ±5 cm)
 
 | | FI | SE | NO |
@@ -51,6 +72,7 @@ bash download.sh                                   # Zenodo data -> data/ST_Whor
 .venv/bin/python src/prep.py all --workers 4 && .venv/bin/python src/prep2.py all --workers 4
 bash run_v5_seeds.sh                               # 8-seed CV + fit of both CNNs (source one-hot)
 bash run_v7.sh                                     # dropout/EMA pair, v7 ensemble, stems, submissions/forwood_v7.zip
+bash run_v8a.sh                                    # 9 Nov rules: v2 labels, per-source decoding, submissions/forwood_v8a.zip
 ```
 Settings and nested-CV numbers of the submitted ensemble: `preds/final_v7ens.json`. The older v5 recipe is still reproducible with `src/ensemble.py` and `preds/ens_v5.json`.
 

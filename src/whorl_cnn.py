@@ -239,6 +239,7 @@ def main():
     ap.add_argument("--sigma", type=float, default=0.03); ap.add_argument("--extra", action="store_true")
     ap.add_argument("--dropout", type=float, default=0.0); ap.add_argument("--wd", type=float, default=1e-4)
     ap.add_argument("--tta", default=""); ap.add_argument("--rmap", action="store_true")
+    ap.add_argument("--labels", default=str(DATA / "train/branch_references.csv"))   # FOR-wood v2 (9 Nov): data_v2/.../branch_references.csv
     a = ap.parse_args()
     global CACHE, CROP, DIL, DISTS, SRC_ONEHOT, ARCH, EMA, STRETCH, SIGMA, EXTRA, DROP, WD, TTA, RMAP
     RMAP = a.rmap
@@ -251,7 +252,7 @@ def main():
     DIL = (1, 2, 4, 8, 16, 32, 1, 2, 4, 8) if binw == 0.01 else None
     DISTS = sorted({max(2, int(round(m / binw))) for m in (0.06, 0.08, 0.10, 0.12, 0.14, 0.16, 0.20)})
     dev = torch.device("mps" if torch.backends.mps.is_available() else "cpu"); torch.set_num_threads(4)
-    b = pd.read_csv(DATA / "train/branch_references.csv"); b["TreeID"] = b.TreeID.astype(str)
+    b = pd.read_csv(a.labels); b["TreeID"] = b.TreeID.astype(str)
     refs = {k: g.Z.values for k, g in b.groupby("TreeID")}; src = dict(zip(b.TreeID, b.source))
     trees = load("train"); targets(trees, refs); ids = sorted(trees)
     allX = np.concatenate([trees[i]["X"] for i in ids]); mu = allX.mean(0).astype(np.float32); sd = (allX.std(0) + 1e-6).astype(np.float32)

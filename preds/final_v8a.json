@@ -1,0 +1,31 @@
+{
+ "tags": [
+  "v1s8_src",
+  "v2s8_src",
+  "d1es",
+  "d2es"
+ ],
+ "labels": "data_v2/ST_WhorlDetection_StemEstimation/train/branch_references.csv",
+ "per_source": {
+  "FI": {
+   "rule": "peaks",
+   "thr": 0.25,
+   "dist": 16,
+   "ext": 0.0,
+   "oof_tree_F1": 0.7902251180174371
+  },
+  "SE": {
+   "rule": "peaks",
+   "thr": 0.15,
+   "dist": 6,
+   "ext": 0.15,
+   "oof_tree_F1": 0.7906564257641233
+  },
+  "NO": {
+   "rule": "comb",
+   "start": 0.8,
+   "spacing": 0.12,
+   "train_tree_F1": 0.34988659579143155
+  }
+ }
+}

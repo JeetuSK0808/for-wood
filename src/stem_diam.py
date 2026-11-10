@@ -53,7 +53,8 @@ def model():
 
 def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else "cv"; tag = sys.argv[sys.argv.index("--tag") + 1] if "--tag" in sys.argv else "v1"
-    refs = pd.read_csv(DATA / "train/stem_references.csv").dropna(subset=["Z", "D"]); refs["TreeID"] = refs.TreeID.astype(str)
+    lab = sys.argv[sys.argv.index("--labels") + 1] if "--labels" in sys.argv else DATA / "train/stem_references.csv"   # v2: data_v2/...
+    refs = pd.read_csv(lab).dropna(subset=["Z", "D"]); refs["TreeID"] = refs.TreeID.astype(str)
     trees = load("train"); X, y, d0, g, src = train_rows(trees, refs); dref = y + d0
     if mode == "cv":
         fold = np.array([zlib.crc32(t.encode()) % 5 for t in g]); pred = np.zeros(len(y))
@@ -66,7 +67,7 @@ def main():
     else:
         m = model().fit(X, y); test = load("test"); rows = []
         for tid, t in test.items():
-            H = float(t["H"]); zz = np.unique(np.round(np.concatenate([[0.6, 1.3, 2.0], np.arange(0.3, H, 0.1)]), 3))
+            H = float(t["H"]); zz = np.unique(np.round(np.concatenate([[0.6, 1.3, 2.0], np.arange(0.3, H + 0.5, 0.1)]), 3))   # +0.5 m: since 9 Nov, uncovered heights score as D = 0
             F, dfit = feats(t, tid, zz); D = np.maximum(dfit + m.predict(F), 0.005)
             rows += [(tid, float(a), round(float(b), 5)) for a, b in zip(zz, D)]
         (ROOT / "preds").mkdir(exist_ok=True)

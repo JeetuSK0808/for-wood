@@ -9,3 +9,5 @@ logs/
 *.npz
 *.laz
 __pycache__/
+data_v2/
+!preds/final_v8a.json
