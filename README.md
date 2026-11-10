@@ -54,6 +54,17 @@ Nested cross-validation under the new rules (v2 labels; settings chosen on 4 fol
 
 Stem diameter RMSE with the v2-label correction: 0.018 m (FI 0.012, SE 0.007, NO 0.033).
 
+**v8b** retrains the CNNs on the corrected v2 labels: a 2-cm and a 1-cm model as before, plus a 1-cm model that also sees an
+azimuth-resolved map of the stem surface (`src/prep6.py`, `whorl_cnn.py --rmap`). That map is the bark's deviation from a smooth
+per-direction surface, so it shows the small dead-branch stubs that mark whorls below the live crown. Norway uses the comb, minus
+teeth where the heatmap shows nothing within ±5 cm (`final_v2.py --no-rule auto`). Nested cross-validation (`src/compare_board.py`):
+
+| | Skill FI | Skill SE | Skill NO | mean |
+|---|---|---|---|---|
+| v8a (v7 heatmaps) | +0.650 | +0.552 | −0.004 | +0.399 |
+| v8b (v2-label CNNs) | +0.686 | +0.581 | +0.050 | +0.439 |
+
+
 ## Results (out-of-fold, 189 training trees, mean per-tree F1 at ±5 cm)
 
 | | FI | SE | NO |
@@ -73,6 +84,7 @@ bash download.sh                                   # Zenodo data -> data/ST_Whor
 bash run_v5_seeds.sh                               # 8-seed CV + fit of both CNNs (source one-hot)
 bash run_v7.sh                                     # dropout/EMA pair, v7 ensemble, stems, submissions/forwood_v7.zip
 bash run_v8a.sh                                    # 9 Nov rules: v2 labels, per-source decoding, submissions/forwood_v8a.zip
+bash run_v8b.sh                                    # CNNs retrained on the v2 labels (+ relief-map model), submissions/forwood_v8b.zip
 ```
 Settings and nested-CV numbers of the submitted ensemble: `preds/final_v7ens.json`. The older v5 recipe is still reproducible with `src/ensemble.py` and `preds/ens_v5.json`.
 

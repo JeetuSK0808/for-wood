@@ -11,3 +11,4 @@ logs/
 __pycache__/
 data_v2/
 !preds/final_v8a.json
+!preds/final_v8b.json
