@@ -64,6 +64,22 @@ teeth where the heatmap shows nothing within ±5 cm (`final_v2.py --no-rule auto
 | v8a (v7 heatmaps) | +0.650 | +0.552 | −0.004 | +0.399 |
 | v8b (v2-label CNNs) | +0.686 | +0.581 | +0.050 | +0.439 |
 
+**v8c** keeps v8b's whorls (the same `branch_references.csv`) and changes only the stems. The new scorer pools the squared
+diameter error over every evaluation height (0.6 m, 1.3 m, 2 m, then every metre) of every tree, and most of our error came from
+the sparse Norwegian clouds, where a circle fitted to a few dozen noisy points per slab can be off by 20-50 %. v8c blends the
+Norwegian profiles 60/40 with a taper model that uses only the tree's height and crown base (no point-cloud diameter), and makes
+the Finnish and Norwegian profiles non-increasing with height (`src/stem_final.py`). The weight and the switch were chosen per
+source on out-of-fold profiles. Nested cross-validation, scored like the board (`src/eval_stem.py`, `src/eval_stem_var.py`;
+"test mix" weights each source by its expected share of evaluation heights in the 64 test trees):
+
+| stem RMSE (m) | FI | SE | NO | all training trees | test mix |
+|---|---|---|---|---|---|
+| v8b | 0.0120 | 0.0076 | 0.0332 | 0.0189 | 0.0167 |
+| v8c | 0.0119 | 0.0076 | 0.0247 | 0.0156 | 0.0142 |
+
+Test-mix difference: −0.0025 m [95% tree bootstrap −0.0046, −0.0006]. A robust per-slab circle fit and a median-radius estimate
+were also tried for Norway and did not help.
+
 
 ## Results (out-of-fold, 189 training trees, mean per-tree F1 at ±5 cm)
 
@@ -85,6 +101,7 @@ bash run_v5_seeds.sh                               # 8-seed CV + fit of both CNN
 bash run_v7.sh                                     # dropout/EMA pair, v7 ensemble, stems, submissions/forwood_v7.zip
 bash run_v8a.sh                                    # 9 Nov rules: v2 labels, per-source decoding, submissions/forwood_v8a.zip
 bash run_v8b.sh                                    # CNNs retrained on the v2 labels (+ relief-map model), submissions/forwood_v8b.zip
+bash run_v8c.sh                                    # v8b whorls + Norway taper blend and monotone stems, submissions/forwood_v8c.zip
 ```
 Settings and nested-CV numbers of the submitted ensemble: `preds/final_v7ens.json`. The older v5 recipe is still reproducible with `src/ensemble.py` and `preds/ens_v5.json`.
 

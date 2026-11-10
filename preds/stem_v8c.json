@@ -1,0 +1,20 @@
+{
+ "FI": {
+  "lam": 0.0,
+  "iso": 1,
+  "oof_rmse": 0.01185,
+  "oof_rmse_v8b": 0.01201
+ },
+ "SE": {
+  "lam": 0.0,
+  "iso": 0,
+  "oof_rmse": 0.00757,
+  "oof_rmse_v8b": 0.00757
+ },
+ "NO": {
+  "lam": 0.4,
+  "iso": 1,
+  "oof_rmse": 0.02453,
+  "oof_rmse_v8b": 0.03321
+ }
+}
