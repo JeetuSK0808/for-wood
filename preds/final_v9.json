@@ -1,0 +1,74 @@
+{
+ "specs": [
+  "n1,n2,nrm2",
+  "n1,n2,nrm2@gapSE",
+  "n1:3+n1x:5,n2:3+n2x:5,nrm2:3+nrm2x:5",
+  "n1:3+n1x:5,n2:3+n2x:5,nrm2:3+nrm2x:5@gapSE",
+  "n1:3+n1x:5,n2:3+n2x:5,nrm2:3+nrm2x:5,d1v,d2v",
+  "n1:3+n1x:5,n2:3+n2x:5,nrm2:3+nrm2x:5,d1v,d2v@gapSE",
+  "n1:3+n1x:5,n2:3+n2x:5,nrm2:3+nrm2x:5,d1v,d2v,nrm1",
+  "n1:3+n1x:5,n2:3+n2x:5,nrm2:3+nrm2x:5,d1v,d2v,nrm1@gapSE"
+ ],
+ "labels": "data_v2/ST_WhorlDetection_StemEstimation/train/branch_references.csv",
+ "all_train_F1": {
+  "FI": [
+   0.81107,
+   0.81107,
+   0.8169,
+   0.8169,
+   0.81574,
+   0.81574,
+   0.81814,
+   0.81814
+  ],
+  "SE": [
+   0.80581,
+   0.81052,
+   0.81551,
+   0.81743,
+   0.81481,
+   0.81481,
+   0.81353,
+   0.81383
+  ],
+  "NO": [
+   0.38938,
+   0.38938,
+   0.39407,
+   0.39407,
+   0.40125,
+   0.40125,
+   0.40067,
+   0.40067
+  ]
+ },
+ "per_source": {
+  "FI": {
+   "spec": "n1:3+n1x:5,n2:3+n2x:5,nrm2:3+nrm2x:5,d1v,d2v,nrm1",
+   "rule": "peaks",
+   "thr": 0.25,
+   "dist": 12,
+   "ext": 0.0,
+   "oof_tree_F1": 0.8181421196176236
+  },
+  "SE": {
+   "spec": "n1:3+n1x:5,n2:3+n2x:5,nrm2:3+nrm2x:5@gapSE",
+   "rule": "peaks_gap",
+   "thr": 0.2,
+   "dist": 8,
+   "ext": 0.2,
+   "rmin": 0.0,
+   "rfill": 2.1,
+   "tlow": 0.1,
+   "oof_tree_F1": 0.8174277466855214
+  },
+  "NO": {
+   "spec": "n1:3+n1x:5,n2:3+n2x:5,nrm2:3+nrm2x:5,d1v,d2v",
+   "rule": "fcomb",
+   "start": 0.6,
+   "spacing": 0.12,
+   "tau": 0.16,
+   "train_tree_F1": 0.40125385496484955
+  }
+ }
+}

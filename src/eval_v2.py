@@ -19,9 +19,23 @@ def setup(labels, tags):
     b = pd.read_csv(labels); b["TreeID"] = b.TreeID.astype(str)
     refs = {k: np.sort(g.Z.values) for k, g in b.groupby("TreeID")}
     g2 = E.grids()["g2"]; fold = E.grids()["fold"]
-    heat = E.combine_many([E.load_tags(t) for t in tags.split(",")])
+    heat = E.combine_many([load_group(t) for t in tags.split(",")])
     top = {k: float(g2[k]["zb"][-1]) for k in heat}
     return refs, g2, fold, heat, top
+
+
+def parse_group(g):
+    """'a:3+b:5' -> [('a', 3.0), ('b', 5.0)] (weights = seed counts, so the group is the mean over all seeds); 'a' -> [('a', 1.0)]"""
+    return [(m.split(":")[0], float(m.split(":")[1]) if ":" in m else 1.0) for m in g.split("+")]
+
+
+def load_group(g):
+    """out-of-fold heatmaps of one ensemble member; a plain tag is E.load_tags(tag) unchanged"""
+    mem = parse_group(g)
+    if len(mem) == 1:
+        return E.load_tags(mem[0][0])
+    hs = [(E.load_tags(t), w) for t, w in mem]; tw = sum(w for _, w in hs)
+    return {k: sum(w * h[k] for h, w in hs) / tw for k in hs[0][0]}
 
 
 def comb_table(ks, refs, top):

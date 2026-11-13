@@ -5,14 +5,16 @@ FI and SE: average the CNN heatmaps, pick peaks with (thr, dist) and optionally 
 given labels (mean tree F1, score_v2). NO: the model is no better than the blind comb there (nested CV, 9 Nov), so predict the
 comb (start, spacing) tuned on the training trees, from the start height to the tree top. Writes preds/whorls_<out>.csv.
 
-usage: python src/final_v2.py <out_tag> <labels.csv> <tag1> <tag2> ... [--no-rule comb|auto]
+usage: python src/final_v2.py <out_tag> <labels.csv> <tag1> <tag2> ... [--no-rule comb|auto] [--gap SE]
+  a tag may be a weighted group 'a:3+b:5' (= the mean over all seeds of two runs of the same model; eval_v2.parse_group)
+  --gap SE (v9): for these sources pick the spacing-aware decoding of decode_gap.py (grid decode_gap.grid) instead of plain peaks
   --no-rule auto (v8b): for NO pick, on all training trees, the best of the plain comb, the heatmap-filtered comb (teeth kept only
   where the heatmap max within +-5 cm reaches tau; eval_no.py) and model peaks. Default comb = v8a.
 """
 import itertools, json, sys
 import numpy as np, pandas as pd
 from scipy.ndimage import maximum_filter1d
-sys.path.insert(0, "src"); import whorl_cnn as W, evalcv as E, score_v2 as S, eval_v2 as V, eval_no as N
+sys.path.insert(0, "src"); import whorl_cnn as W, evalcv as E, score_v2 as S, eval_v2 as V, eval_no as N, decode_gap as DG
 from ensemble import load_grid, src_of
 
 EXT = (0, 0.10, 0.15, 0.20, 0.30)
@@ -28,12 +30,19 @@ def predict(h, zb, top, thr, dist, ext):
 
 
 def main():
-    rule = sys.argv[sys.argv.index("--no-rule") + 1] if "--no-rule" in sys.argv else "comb"
-    args = [a for i, a in enumerate(sys.argv[1:], 1) if a != "--no-rule" and sys.argv[i - 1] != "--no-rule"]
+    opt = lambda name, default: sys.argv[sys.argv.index(name) + 1] if name in sys.argv else default
+    rule = opt("--no-rule", "comb"); gap = [x for x in opt("--gap", "").split(",") if x]; flags = ("--no-rule", "--gap")
+    args = [a for i, a in enumerate(sys.argv[1:], 1) if a not in flags and sys.argv[i - 1] not in flags]
     out, labels, tags = args[0], args[1], args[2:]
     refs, g2, fold, oof, top = V.setup(labels, ",".join(tags)); cfg = {"tags": tags, "labels": labels, "per_source": {}}
     for s in ("FI", "SE"):
         ks = sorted(k for k in oof if src_of(k) == s and k in refs)
+        if s in gap:   # spacing-aware peaks (decode_gap.py): suppress too-close peaks, fill wide gaps from weak maxima
+            res = {g: np.mean([S.tree_prf(DG.predict(oof[k], g2[k]["zb"], top[k], *g), refs[k])[2] for k in ks]) for g in DG.grid(s)}
+            g = max(res, key=res.get)
+            cfg["per_source"][s] = dict(rule="peaks_gap", thr=float(g[0]), dist=int(g[1]), ext=float(g[2]), rmin=float(g[3]), rfill=float(g[4]),
+                                        tlow=float(g[5]), oof_tree_F1=float(res[g]))
+            continue
         res = {g: np.mean([S.tree_prf(predict(oof[k], g2[k]["zb"], top[k], *g), refs[k])[2] for k in ks])
                for g in itertools.product(V.THR, V.DIST, EXT)}
         g = max(res, key=res.get); cfg["per_source"][s] = dict(rule="peaks", thr=float(g[0]), dist=int(g[1]), ext=float(g[2]), oof_tree_F1=float(res[g]))
@@ -51,12 +60,15 @@ def main():
             cfg["per_source"]["NO"] = (dict(rule="fcomb", start=round(float(b[1]), 2), spacing=float(b[2]), tau=float(b[3]), train_tree_F1=float(cand[b]))
                                        if b[0] == "fcomb" else dict(rule="peaks", thr=float(b[1]), dist=int(b[2]), ext=0.0, train_tree_F1=float(cand[b])))
     t2 = load_grid("cache2", "test"); t1 = load_grid("cache", "test")
-    heats = [dict(np.load(f"preds/test_heat_{t}.npz")) for t in tags]; rows = []
+    heats = [[(dict(np.load(f"preds/test_heat_{m}.npz")), w) for m, w in V.parse_group(t)] for t in tags]; rows = []
     for k in sorted(t2):
         zb = t2[k]["zb"]; tp = float(zb[-1]); c = cfg["per_source"][src_of(k)]
-        h = np.mean([x[k] if len(x[k]) == len(zb) else np.interp(zb, t1[k]["zb"], x[k]) for x in heats], 0)
+        on = lambda x: x[k] if len(x[k]) == len(zb) else np.interp(zb, t1[k]["zb"], x[k])
+        h = np.mean([on(g[0][0]) if len(g) == 1 else sum(w * on(x) for x, w in g) / sum(w for _, w in g) for g in heats], 0)
         if c["rule"] == "comb":
             z = S.comb(c["start"], c["spacing"], tp)
+        elif c["rule"] == "peaks_gap":
+            z = DG.predict(h, zb, tp, c["thr"], c["dist"], c["ext"], c["rmin"], c["rfill"], c["tlow"])
         elif c["rule"] == "fcomb":
             z = N.fcomb(maximum_filter1d(h, 11), zb, c["start"], c["spacing"], tp, c["tau"])
         else:

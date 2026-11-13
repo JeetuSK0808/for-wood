@@ -80,6 +80,28 @@ source on out-of-fold profiles. Nested cross-validation, scored like the board (
 Test-mix difference: −0.0025 m [95% tree bootstrap −0.0046, −0.0006]. A robust per-slab circle fit and a median-radius estimate
 were also tried for Norway and did not help.
 
+**v9** adds members to the v2-label ensemble and lets each source choose its own ensemble. Each v8b CNN gets 5 more seeds (seeds
+3-7, averaged with its 3 v8b seeds), the dropout/EMA/height-stretch pair of v7 is retrained on the v2 labels (`d1v`, `d2v`), and a
+2-cm version of the relief-map model is added (`nrm1`, `cache7`). Sweden can also be decoded with spacing-aware peaks
+(`src/decode_gap.py`: drop the weaker of two peaks much closer than the local whorl spacing, fill gaps much wider than it from weaker
+heatmap maxima). For each source the ensemble and its decoding setting are chosen together on 4 folds and scored on the 5th
+(`src/compare_board.py --stack`), and for the submission once on all training trees (`src/final_stack.py`): Finland uses all
+members, Sweden the 8-seed groups with spacing-aware peaks, Norway the 8-seed groups plus the dropout pair (filtered comb).
+Nested cross-validation; "height-weighted" weights the training trees by the test trees' height mix per source (label-free;
+the Swedish test trees are much shorter than the training trees):
+
+| | Skill FI | Skill SE | Skill NO | mean | height-weighted mean |
+|---|---|---|---|---|---|
+| v8b / v8c (n1, n2, nrm2) | +0.686 | +0.581 | +0.050 | +0.439 | +0.426 |
+| + 5 seeds per model | +0.692 | +0.590 | +0.061 | +0.448 | +0.430 |
+| + dropout pair | +0.694 | +0.596 | +0.072 | +0.454 | +0.436 |
+| + 2-cm relief-map model | +0.699 | +0.583 | +0.054 | +0.445 | +0.427 |
+| v9: ensemble chosen per source | +0.696 | +0.593 | +0.067 | +0.452 | +0.441 |
+
+v9 − v8b: +0.0129 [95% paired tree bootstrap +0.0025, +0.0252]; height-weighted +0.0146 [+0.0005, +0.0295]. Spacing-aware
+decoding alone adds +0.0048 [+0.0002, +0.0104] to v8b's ensemble, +0.0041 to the 8-seed groups and nothing once the dropout
+pair is in. Stems are v8c's.
+
 
 ## Results (out-of-fold, 189 training trees, mean per-tree F1 at ±5 cm)
 
@@ -102,6 +124,7 @@ bash run_v7.sh                                     # dropout/EMA pair, v7 ensemb
 bash run_v8a.sh                                    # 9 Nov rules: v2 labels, per-source decoding, submissions/forwood_v8a.zip
 bash run_v8b.sh                                    # CNNs retrained on the v2 labels (+ relief-map model), submissions/forwood_v8b.zip
 bash run_v8c.sh                                    # v8b whorls + Norway taper blend and monotone stems, submissions/forwood_v8c.zip
+bash run_v9.sh                                     # more seeds and members, ensemble chosen per source, submissions/forwood_v9.zip
 ```
 Settings and nested-CV numbers of the submitted ensemble: `preds/final_v7ens.json`. The older v5 recipe is still reproducible with `src/ensemble.py` and `preds/ens_v5.json`.
 
